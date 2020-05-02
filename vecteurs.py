@@ -65,10 +65,11 @@ class vecteur:
         
         
         if type(valeur) != vecteur:
-        
+
             x = self.x * valeur
             y = self.y * valeur
             z = self.z * valeur
+
             return vecteur(x,y,z)
         
         else:

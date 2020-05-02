@@ -5,9 +5,14 @@ class rayon:
     def __init__(self,origine,direction):
        
         self.origine = vecteur(origine[0],origine[1],origine[2])
-       
-        self.ndirection = direction.normaliser()
+        
+        
         self.direction = direction
+        
+        self.ndirection = direction.normaliser()
+        direction = direction-self.origine
+        self.ndirection_decale = direction.normaliser()
+        
 
     
     

@@ -26,8 +26,10 @@ class image:
                 try:
                     file.write("{}\n{}\n{}\n".format(redim_valeur(pixel.r),redim_valeur(pixel.g),redim_valeur(pixel.b)))
                 except:
+                    print(pixel)
                     print(ligne)
                     print(self.pixels.index(ligne))
+                    file.write("{}\n{}\n{}\n".format(redim_valeur(pixel.r),redim_valeur(pixel.g),redim_valeur(pixel.b)))
                     raise "erreur"
             #file.write("\n")
     
