@@ -46,7 +46,7 @@ class sphere:
     
     def normale(self,ray,CAMERA):
 
-        p = ray.origine + ray.direction*self.intersection(ray,CAMERA)[1]
+        p = ray.origine + ray.ndirection_decale*self.intersection(ray,CAMERA)[1]
         normale = (p-self.position).normaliser()
         return normale
     
@@ -156,7 +156,7 @@ class surface:
         
         t = self.intersection(ray,(0,0,0))[1]
         
-        if ray.ndirection.x*t%5 <=2:
+        if (ray.ndirection.x*t%5 <=2) ^ (ray.ndirection.z*t%5 <=2):
             r = 0.8
             g = 0.8
             b = 0
@@ -183,10 +183,9 @@ class lumiere:
         
         inter = test_intersection(ray,scene,CAMERA)
         
-        if inter[0]:# and inter[3] == "HORS":
+        if inter[0]:
             return 0.2
         else:
-            return 1
             return self.intensite
     
     def intersection(self,rayon,CAMERA):
@@ -198,11 +197,11 @@ def test_lumiere(ray,scene,objet_origine,CAMERA,t):
     
     list_val = []
     for objet in scene:
-        
         if type(objet) == lumiere:
             rayon_lum = rayon((ray.ndirection_decale.x*t,ray.ndirection_decale.y*t,ray.ndirection_decale.z*t),objet.position)
             val = objet.illumine(rayon_lum,scene,CAMERA)
-            #val = abs(val*ray.ndirection.prod_scalaire(objet_origine.normale(ray,CAMERA)))
+            if val != "Global":
+                val = abs(val*ray.ndirection_decale.prod_scalaire(objet_origine.normale(ray,CAMERA)))
             list_val += [val]
         
     return max(list_val)

@@ -41,12 +41,12 @@ def couleur_rayon_old(ray,scene,CAMERA,level=10,TRACER = "OFF"):
             t = objet_scene[2]
 
             if objet_scene[3] == "DANS":
-                centre_sphere = ray.ndirection*t+objet_scene[1].normale(ray,CAMERA)
+                centre_sphere = ray.ndirection_decale*t+objet_scene[1].normale(ray,CAMERA)
             
             elif objet_scene[3] == "HORS":
-                centre_sphere = ray.ndirection*t-objet_scene[1].normale(ray,CAMERA)
+                centre_sphere = ray.ndirection_decale*t-objet_scene[1].normale(ray,CAMERA)
                 try:
-                    centre_sphere = ray.ndirection*t-objet_scene[1].normale(ray,CAMERA)
+                    centre_sphere = ray.ndirection_decale*t-objet_scene[1].normale(ray,CAMERA)
                 except:
                     print(ray,objet_scene)
                     raise TypeError
@@ -57,17 +57,16 @@ def couleur_rayon_old(ray,scene,CAMERA,level=10,TRACER = "OFF"):
             
             point_random = point_sphere_aleatoire(centre_sphere)
             
-            p = ray.ndirection*t
+            p = ray.ndirection_decale*t
             new_ray = rayon((p.x,p.y,p.z),point_random-p)
             
-
-                   
+            
             
             if level == 10:
-                return ((0.5*couleur_rayon(new_ray,scene,CAMERA,level-1)+0.5*objet_scene[1].couleur_inter(ray))+couleur(0,0,0))/2
+                return ((0.5*couleur_rayon_old(new_ray,scene,CAMERA,level-1)+0.5*objet_scene[1].couleur_inter(ray))+couleur(0,0,0))/2
             else:
                 
-                return ((0.5*couleur_rayon(new_ray,scene,CAMERA,level-1))+couleur(0,0,0))/2
+                return ((0.5*couleur_rayon_old(new_ray,scene,CAMERA,level-1))+couleur(0,0,0))/2
         
         else:
 
@@ -100,8 +99,7 @@ def couleur_rayon(ray,scene,CAMERA):
                 
                 val_lumiere = objet.test_lumiere(ray,scene,objet_origine,CAMERA,t)
                 couleur_objet = objet_origine.couleur_inter(ray)*val_lumiere
-                # if type(couleur_objet.r) == complex:
-                #     print("ok")
+
                     
                 return couleur_objet
             
@@ -152,27 +150,27 @@ def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR
 global im
 
 def main():
-    LARGEUR = 1000
-    HAUTEUR = 500
+    LARGEUR = 500
+    HAUTEUR = 250
     CAMERA = (0,0,0)
     ECRAN_BAS_GAUCHE = (-2,-1,-1)
     ECRAN_HORIZONTAL = 4
     ECRAN_VERTICAl = 2
     GAMMA = 2
-    NB_RAYON = 10
+    NB_RAYON = 30
     
     global im
     im = image(LARGEUR,HAUTEUR)
     
-    boule = objet.sphere(0,1.5,-4,1.5)
+    boule = objet.sphere(0,0,-4,1)
     boule2 = objet.sphere(1.5,0.5,-3.5,0.5)
 
     sol = objet.surface("y",-1)
 
-    lum = objet.lumiere(0,10,-1,10)
-    lum2 = objet.lumiere(2,10,-5,10)
+    lum = objet.lumiere(0,10,-4,5)
+    lum2 = objet.lumiere(0,2,-1,10)
     
-    scene = [boule,sol,lum,boule2,lum2]
+    scene = [boule,sol,boule2]
     
     for x,y,list_ray in create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON):
         list_couleurs = []
@@ -211,7 +209,7 @@ def main():
 
 
 
-    with open("tests/test21.ppm","w") as file:
+    with open("tests/test23.ppm","w") as file:
         im.write_img(file)
     
     
