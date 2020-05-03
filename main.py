@@ -79,9 +79,9 @@ def couleur_rayon_old(ray,scene,CAMERA,level=10,TRACER = "OFF"):
             
             return couleur_haut*y+(1-y)*couleur_bas
 
-def couleur_rayon(ray,scene,CAMERA):
+def couleur_rayon(ray,scene):
         
-        objet_scene = objet.test_intersection(ray,scene,CAMERA)
+        objet_scene = objet.test_intersection(ray,scene)
         
         if objet_scene[0]:
 
@@ -96,9 +96,11 @@ def couleur_rayon(ray,scene,CAMERA):
                 
                 pass 
             elif objet_scene[3] == "HORS":
-                
-                val_lumiere = objet.test_lumiere(ray,scene,objet_origine,CAMERA,t)
-                couleur_objet = objet_origine.couleur_inter(ray)*val_lumiere
+                if objet_scene[1].texture.type_obj == "mat":
+                    val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
+                    couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere
+                elif objet_scene[1].texture.type_obj == "métal":
+                    couleur_objet = objet_origine.couleur_inter(ray,scene)
 
                     
                 return couleur_objet
@@ -150,41 +152,33 @@ def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR
 global im
 
 def main():
-    LARGEUR = 500
-    HAUTEUR = 250
+    LARGEUR = 1000
+    HAUTEUR = 500
     CAMERA = (0,0,0)
     ECRAN_BAS_GAUCHE = (-2,-1,-1)
     ECRAN_HORIZONTAL = 4
     ECRAN_VERTICAl = 2
     GAMMA = 2
-    NB_RAYON = 30
+    NB_RAYON = 1
     
     global im
     im = image(LARGEUR,HAUTEUR)
     
-    boule = objet.sphere(0,0,-4,1)
-    boule2 = objet.sphere(1.5,0.5,-3.5,0.5)
-
-    sol = objet.surface("y",-1)
-
-    lum = objet.lumiere(0,10,-4,5)
-    lum2 = objet.lumiere(0,2,-1,10)
+    boule = objet.sphere(0,0.5,-2,0.2,objet.materiel(couleur(0,0.5,0.7),"mat"))
     
-    scene = [boule,sol,boule2]
+    boule2 = objet.sphere(1.5,0,-3.5,1,objet.materiel(couleur(0.43,0.5,0.5),"métal"))
+
+    sol = objet.surface("y",-1,objet.materiel(couleur(1,0,0),"mat"))
+
+    lum = objet.lumiere(0,100,-4,"Global")
+
+    scene = [boule,sol,boule2,lum]
     
     for x,y,list_ray in create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON):
         list_couleurs = []
         for i in range(NB_RAYON):
 
-            list_couleurs += [couleur_rayon(list_ray[i],scene,CAMERA)]
-            
-            # if type(list_couleurs[-1].g**(1/GAMMA)) == complex:
-            #     print("------")
-            #     print(list_ray[i],x,y)
-            #     couleur_rayon(list_ray[i],scene,CAMERA,"ON")
-            #     print(list_couleurs[-1].g)
-            #     print(list_couleurs[-1].g**(1/GAMMA))
-            
+            list_couleurs += [couleur_rayon(list_ray[i],scene)]
             
             list_couleurs[-1].r = list_couleurs[-1].r**(1/GAMMA)
             list_couleurs[-1].g = list_couleurs[-1].g**(1/GAMMA)
@@ -209,7 +203,7 @@ def main():
 
 
 
-    with open("tests/test23.ppm","w") as file:
+    with open("tests/test25.ppm","w") as file:
         im.write_img(file)
     
     
