@@ -89,19 +89,19 @@ def couleur_rayon(ray,scene):
             objet_origine = objet_scene[1]
             
             if objet_scene[3] == "DANS":
-                #centre_sphere = ray.ndirection*t+objet_scene[1].normale(ray,CAMERA)
+                
                 
                 
                 return couleur(0,1,0)
-                
-                pass 
+
             elif objet_scene[3] == "HORS":
+                
                 if objet_scene[1].texture.type_obj == "mat":
                     val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
                     couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere
-                elif objet_scene[1].texture.type_obj == "métal":
+                elif objet_scene[1].texture.type_obj == "métal" or objet_scene[1].texture.type_obj == "verre":
                     couleur_objet = objet_origine.couleur_inter(ray,scene)
-
+                
                     
                 return couleur_objet
             
@@ -140,7 +140,7 @@ def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR
             list_rayons = []
             for i in range(NB_RAYON):
                 dx = random.uniform(0,ECRAN_HORIZONTAL/LARGEUR)
-                dy = random.uniform(0,+ECRAN_VERTICAl/HAUTEUR)
+                dy = random.uniform(0,ECRAN_VERTICAl/HAUTEUR)
                 
                 if NB_RAYON == 1:
                     dx = dy = 0
@@ -159,20 +159,47 @@ def main():
     ECRAN_HORIZONTAL = 4
     ECRAN_VERTICAl = 2
     GAMMA = 2
-    NB_RAYON = 1
+    NB_RAYON = 30
     
     global im
     im = image(LARGEUR,HAUTEUR)
     
-    boule = objet.sphere(0,0.5,-2,0.2,objet.materiel(couleur(0,0.5,0.7),"mat"))
     
-    boule2 = objet.sphere(1.5,0,-3.5,1,objet.materiel(couleur(0.43,0.5,0.5),"métal"))
+    # boule = objet.sphere(0,0.5,-2,0.2,\
+    #                                 objet.materiel(couleur_obj = couleur(0,0.5,0.7),type_obj = "mat"))
+    # 
+    # boule4 = objet.sphere(-2,0,-5,1,\
+    #                                 objet.materiel(couleur_obj = couleur(0.4,0.2,0.4),type_obj = "mat"))
+    # 
+    # boule5 = objet.sphere(-0.3,-1,-1.5,0.2,\
+    #                                 objet.materiel(couleur_obj = couleur(1,0.8,0.1),type_obj = "mat"))
+    # 
+    # boule2 = objet.sphere(1.5,0,-3.5,1,\
+    #                                 objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0.2))
+    # 
+    # 
+    # boule3 = objet.sphere(0.1,-0.2,-2,0.4,\
+    #                                 objet.materiel(couleur_obj = couleur(0.82,0.98,0.98),type_obj = "métal"))
 
-    sol = objet.surface("y",-1,objet.materiel(couleur(1,0,0),"mat"))
+    boule = objet.sphere(0,0,-3,1,\
+                                    objet.materiel(type_obj = "verre",indice_refraction = 1.7))
+    
+    boule2 = objet.sphere(0,0,-9,1,\
+                                    objet.materiel(type_obj = "verre",indice_refraction = 1.7))
+    
+    boule3 = objet.sphere(0,0,-15,1,\
+                                    objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat"))
 
-    lum = objet.lumiere(0,100,-4,"Global")
+    
+    sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat"))
 
-    scene = [boule,sol,boule2,lum]
+    lum = objet.lumiere(0,1000,-4,"Global")
+
+    #scene = [boule,sol,boule2,lum,boule3,boule4,boule5]
+    scene = [boule,sol,lum,boule2,boule3]
+    
+    
+    
     
     for x,y,list_ray in create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON):
         list_couleurs = []
@@ -203,7 +230,7 @@ def main():
 
 
 
-    with open("tests/test25.ppm","w") as file:
+    with open("tests/test33.ppm","w") as file:
         im.write_img(file)
     
     

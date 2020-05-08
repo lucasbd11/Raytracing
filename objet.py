@@ -5,19 +5,35 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from rayons import rayon
-
+import random
 
 
 class materiel:
-    def __init__(self,couleur_obj,type_obj):
+    def __init__(self,**kwargs):
+
         """matériaux possibles: verre ; mat ; métal"""
+        """args: couleur_obj, type_obj, indice_reflextion (0 à 1), indice_refraction"""
+        
+        
+        type_obj =  kwargs["type_obj"]
+        
         
         if not(type_obj in ["verre","mat","métal"]):
             raise TypeError("matériel non connu")
         
-        self.couleur_obj = couleur_obj
         self.type_obj = type_obj
-
+        try:
+            self.couleur_obj = kwargs["couleur_obj"]
+        except:
+            self.couleur_obj = couleur(0,0,0)
+        try:
+            self.indice_reflexion = kwargs["indice_reflexion"]
+        except:
+            self.indice_reflexion = 0
+        try:
+            self.indice_refraction = kwargs["indice_refraction"]
+        except:
+            self.indice_refraction = 1
 
 class sphere:
     
@@ -27,18 +43,28 @@ class sphere:
         
         self.texture = texture
     
-    def intersection(self,rayon):
+    def intersection(self,rayon, debug = False):
         a = rayon.ndirection_decale.prod_scalaire(rayon.ndirection_decale)
         #b = 2*rayon.ndirection.prod_scalaire(rayon.origine-self.position) on pose b = 2d on a donc une équation simplifiée
         d = rayon.ndirection_decale.prod_scalaire(rayon.origine-self.position)
         c = (rayon.origine-self.position).prod_scalaire(rayon.origine-self.position)-self.rayon**2
         
         discriminant = d**2-a*c
-
+        
+        if debug:
+            print(a,d,c)
+            print(discriminant)
+            
         if discriminant >= 0:
             t1 = (-d-math.sqrt(discriminant))/a
             t2 = (-d+math.sqrt(discriminant))/a
+        
+            if debug:
+                print(t1,t2)
+                print("---")
+                print(t2)
             
+        
             if t1 >= 0:
                 if abs(t1)>1e3:
 
@@ -58,33 +84,127 @@ class sphere:
     
     
     def normale(self,ray):
-
-        p = ray.origine + ray.ndirection_decale*self.intersection(ray)[1]
+        
+        try:
+            p = ray.origine + ray.ndirection_decale*self.intersection(ray)[1]
+        except:
+            print(ray)
+            print(self.intersection(ray,True))
+            raise TimeoutError
         normale = (p-self.position).normaliser()
         return normale
     
-    def couleur_inter(self,ray,scene):
+    def couleur_inter(self,ray,scene,*texture):
+        
+        if len(texture) == 1:
+            texture = texture[0]
+        else:
+            texture = None
+        
         couleur_coef = abs(ray.ndirection_decale.prod_scalaire(self.normale(ray)))
-        if self.texture.type_obj == "mat":
+        
+        if self.texture.type_obj == "mat" or texture == "mat":
             couleur_base = self.texture.couleur_obj         
             return (couleur_base+couleur_base*couleur_coef*2)/3
         
-        if self.texture.type_obj == "métal":
+        if self.texture.type_obj == "métal" or texture == "métal":
             point_contact = ray.origine+ray.ndirection_decale*test_intersection(ray,scene)[2]
             
             normale_obj = self.normale(ray)
             ray.origine = point_contact
             ray.ndirection_decale = ray.ndirection_decale+2*normale_obj
             
+
+            dx = random.uniform(-self.texture.indice_reflexion,self.texture.indice_reflexion)
+            dy = random.uniform(-self.texture.indice_reflexion,self.texture.indice_reflexion)
+            dz = random.uniform(-self.texture.indice_reflexion,self.texture.indice_reflexion)
+            
+            ray.ndirection_decale.x += dx
+            ray.ndirection_decale.y += dy
+            ray.ndirection_decale.z += dz
+            
+            
             inter = test_intersection(ray,scene)
             
+            
             if inter[0]:
-                val_lum = test_lumiere(ray,scene,inter[1],inter[2])
+                
+                if inter[1].texture.type_obj == "métal" or inter[1].texture.type_obj == "verre":
+                    val_lum = 1
+                else:
+                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])
+                
                 return (inter[1].couleur_inter(ray,scene)*val_lum+self.texture.couleur_obj*couleur_coef*2)/3
+            
             else:
                 return (couleur(0.7,0.7,1)+self.texture.couleur_obj)/2
             
-    
+        
+        if self.texture.type_obj == "verre" or texture == "verre":
+            
+            normale_obj = self.normale(ray)
+            
+            inter = test_intersection(ray,scene)
+            type_inter = inter[3]
+            point_contact = ray.origine+ray.ndirection_decale*inter[2]
+            
+
+            
+            if type_inter =="HORS":
+                
+                rapport_indice = 1/self.texture.indice_refraction
+                
+            
+            else:
+                normale_obj = -1*normale_obj
+                rapport_indice = self.texture.indice_refraction
+                
+            
+            #r2 = rapport_indice*(ray.ndirection_decale+(-1*(ray.ndirection_decale.prod_scalaire(normale_obj))*normale_obj))
+            
+            r = (-1*ray.ndirection_decale).prod_scalaire(normale_obj)*normale_obj
+            r2 = rapport_indice*(ray.ndirection_decale+r)
+            
+            
+            try:
+                r1 = -1*math.sqrt(1-abs(r2)**2)*normale_obj
+
+            
+            except:
+                
+                #return self.couleur_inter(ray,scene,"métal")
+                return couleur(0,1,0)
+
+            
+            ray.ndirection_decale = (r1+r2).normaliser()
+            ray.origine = point_contact
+            
+            inter = test_intersection(ray,scene)
+            ray.origine = ray.origine + ray.ndirection_decale*0.0001
+            
+            inter = test_intersection(ray,scene)
+            
+            if inter[0]:
+                
+                if inter[1].texture.type_obj == "métal" or inter[1].texture.type_obj == "verre":
+                    val_lum = 1
+                else:
+                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])
+                
+
+                return inter[1].couleur_inter(ray,scene)*val_lum
+
+                
+            
+            else:
+                return couleur(0.7,0.7,1)
+            
+
+            
+            
+            
+            
+            
     
     def debug_graf(self,rayon,type="DEUX"):
         distance = []
@@ -187,7 +307,7 @@ class surface:
         
         t = self.intersection(ray)[1]
         
-        if (ray.ndirection_decale.x*t%1 <=0.5) ^ (ray.ndirection_decale.z*t%1 <=0.5):
+        if ((ray.origine.x+ray.ndirection_decale.x*t)%1 <=0.5) ^ ((ray.origine.z+ray.ndirection_decale.z*t)%1 <=0.5):
             r = 0.8
             g = 0.8
             b = 0
