@@ -99,7 +99,11 @@ def couleur_rayon(ray,scene):
                 if objet_scene[1].texture.type_obj == "mat":
                     val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
                     couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere
-                elif objet_scene[1].texture.type_obj == "métal" or objet_scene[1].texture.type_obj == "verre":
+                 
+                elif objet_scene[1].texture.type_obj == "métal":
+                    val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
+                    couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere*0.92
+                elif objet_scene[1].texture.type_obj == "verre":
                     couleur_objet = objet_origine.couleur_inter(ray,scene)
                 
                     
@@ -159,7 +163,7 @@ def main():
     ECRAN_HORIZONTAL = 4
     ECRAN_VERTICAl = 2
     GAMMA = 2
-    NB_RAYON = 30
+    NB_RAYON = 6
     
     global im
     im = image(LARGEUR,HAUTEUR)
@@ -188,15 +192,22 @@ def main():
                                     objet.materiel(type_obj = "verre",indice_refraction = 1.7))
     
     boule3 = objet.sphere(0,0,-15,1,\
-                                    objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat"))
+                                    objet.materiel(couleur_obj = couleur(0.4,0.2,0.4),type_obj = "mat"))
 
+    
+    boule4 = objet.sphere(0.2,-0.5,-8,0.5,\
+                                    objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0.2))
+    
+    boule5 = objet.sphere(2.5,-0.5,-3,0.5,\
+                                    objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0))
+ 
     
     sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat"))
 
     lum = objet.lumiere(0,1000,-4,"Global")
 
     #scene = [boule,sol,boule2,lum,boule3,boule4,boule5]
-    scene = [boule,sol,lum,boule2,boule3]
+    scene = [boule,sol,lum,boule2,boule3,boule4,boule5]
     
     
     
@@ -230,7 +241,7 @@ def main():
 
 
 
-    with open("tests/test33.ppm","w") as file:
+    with open("tests/test36.ppm","w") as file:
         im.write_img(file)
     
     

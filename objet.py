@@ -129,8 +129,10 @@ class sphere:
             
             if inter[0]:
                 
-                if inter[1].texture.type_obj == "métal" or inter[1].texture.type_obj == "verre":
+                if inter[1].texture.type_obj == "verre":
                     val_lum = 1
+                elif inter[1].texture.type_obj == "métal":
+                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])*0.92
                 else:
                     val_lum = test_lumiere(ray,scene,inter[1],inter[2])
                 
@@ -172,8 +174,8 @@ class sphere:
             
             except:
                 
-                #return self.couleur_inter(ray,scene,"métal")
-                return couleur(0,1,0)
+                return self.couleur_inter(ray,scene,"métal")
+                #return couleur(0,1,0)
 
             
             ray.ndirection_decale = (r1+r2).normaliser()
@@ -186,8 +188,10 @@ class sphere:
             
             if inter[0]:
                 
-                if inter[1].texture.type_obj == "métal" or inter[1].texture.type_obj == "verre":
+                if inter[1].texture.type_obj == "verre":
                     val_lum = 1
+                elif inter[1].texture.type_obj == "métal":
+                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])*0.2
                 else:
                     val_lum = test_lumiere(ray,scene,inter[1],inter[2])
                 
@@ -334,8 +338,8 @@ class lumiere:
         
         inter = test_intersection(ray,scene)
         
-        if inter[0]:
-            return 0.2
+        if inter[0] and inter[1].texture.type_obj != "verre":
+            return 0.7
         else:
             return self.intensite
     
