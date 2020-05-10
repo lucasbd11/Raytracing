@@ -166,7 +166,7 @@ class sphere:
             else:
                 
                 if texture == "métal":
-                    couleur(0.7,0.7,1)
+                    return couleur(0.7,0.7,1)
                 
                 return (couleur(0.7,0.7,1)+self.texture.couleur_obj*couleur_coef*2)/3
             

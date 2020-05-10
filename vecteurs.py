@@ -26,6 +26,9 @@ class vecteur:
     def normaliser(self):
         return self / abs(self)
     
+    def prod_vectorielle(self,vect):
+        return vecteur(self.y*vect.z-self.z*vect.y,self.z*vect.x-self.x*vect.z,self.x*vect.y-self.y*vect.x)
+    
     def __add__(self,vect):
         """surcharge de l'addition pour les vecteurs"""
         

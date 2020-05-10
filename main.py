@@ -129,42 +129,54 @@ def couleur_rayon(ray,scene):
 
 
 
-def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON):
+def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON,DISTANCE_CAM_ECRAN):
+    
+    cam_vect = vecteur(CAMERA[0],CAMERA[1],CAMERA[2])
+    normale_ecran = -1*(ECRAN_HORIZONTAL.prod_vectorielle(ECRAN_VERTICAl)).normaliser()
+    
+    
+    bas_gauche_ecran = -1*ECRAN_HORIZONTAL/2+(-1*ECRAN_VERTICAl/2)+normale_ecran*DISTANCE_CAM_ECRAN+cam_vect
     
     progression = 0 
     for y0 in range(0,HAUTEUR,1):
         
-        y = (y0/HAUTEUR)*ECRAN_VERTICAl
 
+        y = (ECRAN_VERTICAl/HAUTEUR)*y0
         if y0%(HAUTEUR/20) == 0:
             print(y0*100/HAUTEUR)
         
         for x0 in range(0,LARGEUR,1):
-            x = (x0/LARGEUR)*ECRAN_HORIZONTAL
+
+            x = (ECRAN_HORIZONTAL/LARGEUR)*x0
+            
             
             list_rayons = []
             for i in range(NB_RAYON):
-                dx = random.uniform(0,ECRAN_HORIZONTAL/LARGEUR)
-                dy = random.uniform(0,ECRAN_VERTICAl/HAUTEUR)
-                
+                dx = (ECRAN_HORIZONTAL/LARGEUR)*random.uniform(0,1)
+                dy = (ECRAN_VERTICAl/HAUTEUR)*random.uniform(0,1)
+
                 if NB_RAYON == 1:
-                    dx = dy = 0
-                
-                list_rayons += [rayon(CAMERA,vecteur(x+ECRAN_BAS_GAUCHE[0]+dx,y+ECRAN_BAS_GAUCHE[1]+dy,ECRAN_BAS_GAUCHE[2]))]
+                    dx = dy = vecteur(0,0,0)
+                list_rayons += [rayon(CAMERA,bas_gauche_ecran+x+y+dx+dy)]
+
             
 
             yield x0,y0,list_rayons
 global im
 
 def main():
-    LARGEUR = 500
-    HAUTEUR = 250
-    CAMERA = (0,0,0)
+    LARGEUR = 1000
+    HAUTEUR = 500
+    CAMERA = (0,3,0)
+    DISTANCE_CAM_ECRAN = 1
+    ECRAN_HORIZONTAL = vecteur(4,0,0)
+    ECRAN_VERTICAl = vecteur(0,2,-1)
+    
+    
     ECRAN_BAS_GAUCHE = (-2,-1,-1)
-    ECRAN_HORIZONTAL = 4
-    ECRAN_VERTICAl = 2
+
     GAMMA = 2
-    NB_RAYON = 1
+    NB_RAYON = 10
     
     global im
     im = image(LARGEUR,HAUTEUR)
@@ -186,11 +198,10 @@ def main():
     # boule3 = objet.sphere(0.1,-0.2,-2,0.4,\
     #                                 objet.materiel(couleur_obj = couleur(0.82,0.98,0.98),type_obj = "métal"))
 
-    boule = objet.sphere(0,0,-3,1,\
+    boule = objet.sphere(2,2,-6,1,\
                                     objet.materiel(type_obj = "verre",indice_refraction = 1.7))
     
-    boule2 = objet.sphere(0,0,-9,1,\
-                                    objet.materiel(type_obj = "verre",indice_refraction = 1.7))
+
     
     boule3 = objet.sphere(0,0,-15,1,\
                                     objet.materiel(couleur_obj = couleur(0.4,0.2,0.4),type_obj = "mat"))
@@ -203,17 +214,17 @@ def main():
                                     objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0))
  
     
-    sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat", texture_img = "ground.ppm", texture_img_rapport = 40))
+    sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat", texture_img = "texture/dirt.ppm", texture_img_rapport = 1))
 
     lum = objet.lumiere(0,1000,-4,"Global")
 
     #scene = [boule,sol,boule2,lum,boule3,boule4,boule5]
-    scene = [boule,sol,lum]
+    scene = [boule,sol,lum,boule3,boule4,boule5]
     
     
     
     
-    for x,y,list_ray in create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON):
+    for x,y,list_ray in create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR,HAUTEUR,NB_RAYON,DISTANCE_CAM_ECRAN):
         list_couleurs = []
         for i in range(NB_RAYON):
 
@@ -242,7 +253,7 @@ def main():
 
 
 
-    with open("tests/test41.ppm","w") as file:
+    with open("tests/test42.ppm","w") as file:
         im.write_img(file)
     
     
