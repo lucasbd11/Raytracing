@@ -99,7 +99,8 @@ def couleur_rayon(ray,scene):
                 if objet_scene[1].texture.type_obj == "mat":
                     val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
                     couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere
-                 
+                    
+                    
                 elif objet_scene[1].texture.type_obj == "métal":
                     val_lumiere = objet.test_lumiere(ray,scene,objet_origine,t)
                     couleur_objet = objet_origine.couleur_inter(ray,scene)*val_lumiere*0.92
@@ -156,14 +157,14 @@ def create_rayon(CAMERA,ECRAN_BAS_GAUCHE,ECRAN_HORIZONTAL,ECRAN_VERTICAl,LARGEUR
 global im
 
 def main():
-    LARGEUR = 1000
-    HAUTEUR = 500
+    LARGEUR = 500
+    HAUTEUR = 250
     CAMERA = (0,0,0)
     ECRAN_BAS_GAUCHE = (-2,-1,-1)
     ECRAN_HORIZONTAL = 4
     ECRAN_VERTICAl = 2
     GAMMA = 2
-    NB_RAYON = 6
+    NB_RAYON = 1
     
     global im
     im = image(LARGEUR,HAUTEUR)
@@ -194,7 +195,7 @@ def main():
     boule3 = objet.sphere(0,0,-15,1,\
                                     objet.materiel(couleur_obj = couleur(0.4,0.2,0.4),type_obj = "mat"))
 
-    
+   
     boule4 = objet.sphere(0.2,-0.5,-8,0.5,\
                                     objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0.2))
     
@@ -202,12 +203,12 @@ def main():
                                     objet.materiel(couleur_obj = couleur(0.86,0.49,0.14),type_obj = "métal",indice_reflexion = 0))
  
     
-    sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat"))
+    sol = objet.surface("y",-1,objet.materiel(couleur_obj = couleur(1,0,0),type_obj = "mat", texture_img = "ground.ppm", texture_img_rapport = 40))
 
     lum = objet.lumiere(0,1000,-4,"Global")
 
     #scene = [boule,sol,boule2,lum,boule3,boule4,boule5]
-    scene = [boule,sol,lum,boule2,boule3,boule4,boule5]
+    scene = [boule,sol,lum]
     
     
     
@@ -241,7 +242,7 @@ def main():
 
 
 
-    with open("tests/test36.ppm","w") as file:
+    with open("tests/test41.ppm","w") as file:
         im.write_img(file)
     
     

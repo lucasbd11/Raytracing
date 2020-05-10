@@ -11,7 +11,7 @@ import random
 class materiel:
     def __init__(self,**kwargs):
 
-        """matériaux possibles: verre ; mat ; métal"""
+        """matériaux possibles: verre ; mat ; métal ; texture_img ; texture_img_rapport"""
         """args: couleur_obj, type_obj, indice_reflextion (0 à 1), indice_refraction"""
         
         
@@ -25,7 +25,7 @@ class materiel:
         try:
             self.couleur_obj = kwargs["couleur_obj"]
         except:
-            self.couleur_obj = couleur(0,0,0)
+            self.couleur_obj = None
         try:
             self.indice_reflexion = kwargs["indice_reflexion"]
         except:
@@ -34,7 +34,34 @@ class materiel:
             self.indice_refraction = kwargs["indice_refraction"]
         except:
             self.indice_refraction = 1
+    
+        try:
+            self.texture_img = kwargs["texture_img"]
+            self.texture_img_rapport = kwargs["texture_img_rapport"]
+            
+            with open(self.texture_img,"r") as file:
+                lines = file.readlines()
+            
+            index = 0
+            while not(lines[index].find("#") == -1 and lines[index].find(" ") > 0):
+                index += 1
+            
+            largeur, hauteur = lines[index].split(" ")
+            
+            texture_pixel_img = [[None for i in range(int(largeur))] for i in range(int(hauteur))]
+            
+            lines = lines[index+2:]
+            index = 0
+            for index_ligne,ligne in enumerate(texture_pixel_img):
+                for index_colonne,pixel in enumerate(ligne):
+                    texture_pixel_img[index_ligne][index_colonne] = couleur(int(lines[index][:-1])/255,int(lines[index+1][:-1])/255,int(lines[index+2][:-1])/255)
+                    index += 3
+            self.texture_pixel_img = texture_pixel_img
 
+        except:
+            self.texture_img = None
+        
+        
 class sphere:
     
     def __init__(self,x,y,z,rayon,texture):
@@ -43,7 +70,7 @@ class sphere:
         
         self.texture = texture
     
-    def intersection(self,rayon, debug = False):
+    def intersection(self,rayon):
         a = rayon.ndirection_decale.prod_scalaire(rayon.ndirection_decale)
         #b = 2*rayon.ndirection.prod_scalaire(rayon.origine-self.position) on pose b = 2d on a donc une équation simplifiée
         d = rayon.ndirection_decale.prod_scalaire(rayon.origine-self.position)
@@ -51,18 +78,16 @@ class sphere:
         
         discriminant = d**2-a*c
         
-        if debug:
-            print(a,d,c)
-            print(discriminant)
+
             
         if discriminant >= 0:
             t1 = (-d-math.sqrt(discriminant))/a
             t2 = (-d+math.sqrt(discriminant))/a
-        
-            if debug:
-                print(t1,t2)
-                print("---")
-                print(t2)
+            
+            # list_t = [t1,t2]
+            # list_t.sort()
+            # t1 = list_t[0]
+            # t2 = list_t[1]
             
         
             if t1 >= 0:
@@ -85,12 +110,9 @@ class sphere:
     
     def normale(self,ray):
         
-        try:
-            p = ray.origine + ray.ndirection_decale*self.intersection(ray)[1]
-        except:
-            print(ray)
-            print(self.intersection(ray,True))
-            raise TimeoutError
+
+        p = ray.origine + ray.ndirection_decale*self.intersection(ray)[1]
+
         normale = (p-self.position).normaliser()
         return normale
     
@@ -136,10 +158,17 @@ class sphere:
                 else:
                     val_lum = test_lumiere(ray,scene,inter[1],inter[2])
                 
+                if texture == "métal":
+                    return inter[1].couleur_inter(ray,scene)
+                
                 return (inter[1].couleur_inter(ray,scene)*val_lum+self.texture.couleur_obj*couleur_coef*2)/3
             
             else:
-                return (couleur(0.7,0.7,1)+self.texture.couleur_obj)/2
+                
+                if texture == "métal":
+                    couleur(0.7,0.7,1)
+                
+                return (couleur(0.7,0.7,1)+self.texture.couleur_obj*couleur_coef*2)/3
             
         
         if self.texture.type_obj == "verre" or texture == "verre":
@@ -191,7 +220,7 @@ class sphere:
                 if inter[1].texture.type_obj == "verre":
                     val_lum = 1
                 elif inter[1].texture.type_obj == "métal":
-                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])*0.2
+                    val_lum = test_lumiere(ray,scene,inter[1],inter[2])*0.92
                 else:
                     val_lum = test_lumiere(ray,scene,inter[1],inter[2])
                 
@@ -311,20 +340,33 @@ class surface:
         
         t = self.intersection(ray)[1]
         
-        if ((ray.origine.x+ray.ndirection_decale.x*t)%1 <=0.5) ^ ((ray.origine.z+ray.ndirection_decale.z*t)%1 <=0.5):
-            r = 0.8
-            g = 0.8
-            b = 0
+        if self.texture.texture_img != None:
+            
+            rapport_x = (self.texture.texture_img_rapport*len(self.texture.texture_pixel_img))/len(self.texture.texture_pixel_img[0])
+            z = (ray.origine.x+ray.ndirection_decale.z*t)%self.texture.texture_img_rapport
+            x = (ray.origine.x+ray.ndirection_decale.x*t)%rapport_x
+            
+            pixel_y = (z*len(self.texture.texture_pixel_img))/self.texture.texture_img_rapport
+            pixel_x = (x*len(self.texture.texture_pixel_img[0]))/rapport_x
+            
+            return self.texture.texture_pixel_img[math.floor(pixel_y)][math.floor(pixel_x)]
+            
+            
         else:
-            r = 0
-            g = 0.8
-            b = 0.8
+            if ((ray.origine.x+ray.ndirection_decale.x*t)%1 <=0.5) ^ ((ray.origine.z+ray.ndirection_decale.z*t)%1 <=0.5):
+                r = 0.8
+                g = 0.8
+                b = 0
+            else:
+                r = 0
+                g = 0.8
+                b = 0.8
+        
+        
+            
     
-       
-        
-
-        
-        return couleur(r,g,b)
+            
+            return couleur(r,g,b)
 
 
 
@@ -352,6 +394,7 @@ def test_lumiere(ray,scene,objet_origine,t):
     
     list_val = []
     for objet in scene:
+        
         if type(objet) == lumiere:
             rayon_lum = rayon((ray.ndirection_decale.x*t+ray.origine.x,ray.ndirection_decale.y*t+ray.origine.y,ray.ndirection_decale.z*t+ray.origine.z),objet.position)
             val = objet.illumine(rayon_lum,scene)
@@ -395,39 +438,4 @@ def test_intersection(ray,scene):
         list_posi.pop(index)
         
     return True,scene_obj[list_t.index(min(list_t))],min(list_t),list_posi[list_t.index(min(list_t))]
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
 
